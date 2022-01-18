@@ -1,162 +1,163 @@
-#Platforming Game
-
 import pygame
 import sys
-import math
+import time
 import random
 
 pygame.init()
-pygame.display.set_caption("Platformer Game Intro with Camera by @TokyoEdtech")
-clock = pygame.time.Clock()
 
-WIDTH = 1200
-HEIGHT = 800
-GRAVITY = 1
-
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-
-
-# Create the screen
+#Screen proportions
+WIDTH = 642
+HEIGHT = 400
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+clock = pygame.time.Clock()
+pygame.display.set_caption("Endless runner")
+time_passed = 5
 
-# Create classes
+
+
 class Sprite():
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, image):
         self.x = x
         self.y = y
-        self.dx = 0
         self.dy = 0
+        self.dx = 0
         self.width = width
         self.height = height
-        self.color = WHITE
-        self.friction = 0.9
+        self.image = image
+
+class Ground(Sprite):
+    def __init__(self, x, y, width, height, image):
+        Sprite.__init__(self, x, y, width, height, image)
+
+    def draw(self):
+        screen.blit(self.image, (self.x, self.y))
+        screen.blit(self.image, ((self.x + 624), self.y))
+
+    def move(self):
+        self.x -= time_passed
+
+        #Make an illusion looking like it's a never ending ground by having two grounds that teleport when they go past the screen's width by 2 times (-642)
+        if self.x <= -642:
+            self.x = 0
+
+    
+
+class Dinosaur(Sprite):
+    def __init__(self, x, y, width, height, image):
+        Sprite.__init__(self, x, y, width, height, image)
+
+        #I'm having all of my sprites in an image and im gonna rotate between them, this is where I initialize them
+        self.sprites = []
+        self.index = 0
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino1.png"), (50, 60)))
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino2.png"), (50, 60)))
         
-    def goto(self, x, y):
+        self.image = self.sprites[self.index]
+
+        #To jump I need gravity and a true or false for jumping
+        self.state = False
+        self.gravity = 1.5
+
+
+    def animate(self): # I need help on slowing down my animation, i tried time.sleep but it stopped everything
+        self.index += 1
+        if self.index > 1:
+            self.index = 0
+        self.image = self.sprites[self.index]
+        screen.blit(self.image, (self.x, self.y))
+
+    def update(self):
+        self.x += self.dx
+        self.y += self.dy
+        self.dy += self.gravity
+    
+    def place(self, x, y):
         self.x = x
         self.y = y
 
-    def render(self, camera):
-        pygame.draw.rect(screen, self.color, pygame.Rect(int(self.x-self.width/2.0-camera.x + WIDTH/2.0), int(self.y-self.height/2.0), self.width, self.height)) 
-
-    def is_aabb_collision(self, other):
-        # Axis Aligned Bounding Box
-        x_collision = (math.fabs(self.x - other.x) * 2) < (self.width + other.width)
-        y_collision = (math.fabs(self.y - other.y) * 2) < (self.height + other.height)
-        return (x_collision and y_collision)
-
-class Player(Sprite):
-    def __init__(self, x, y, width, height):
-        Sprite.__init__(self, x, y, width, height)
-        self.color=GREEN
-    
-    def move(self):
-        self.x += self.dx
-        self.y += self.dy
-        self.dy += GRAVITY
-        
     def jump(self):
-        self.dy -= 24
+        self.dy = -19
+        self.state = True
         
-    def left(self):
-        self.dx -= 6
-        if self.dx < -12:
-            self.dx = -12
+    def falldown(self):
+        self.dy += 12
         
-    def right(self):
-        self.dx += 6
-        if self.dx > 12:
-            self.dx = 12
+class Cactus(Sprite):
+    def __init__(self, x, y, width, height, image):
+        Sprite.__init__(self, x, y, width, height, image)
+        self.sprites = [] 
+        self.xy = []
+        self.index = 1
 
-class Camera():
-    def __init__(self, target):
-        self.x = target.x
-        self.y = target.y
+    #     for i in range(1, 6):
+    #         self.sprites.append(pygame.image.load(f"assets/cacti/cactus{i}.png"))
+    #     for n in range(len(self.sprites)-1):
+    #         self.xy.append((self.x + (n * 400)))
+
+    # def draw(self):
+    #     screen.blit
+
+    # def move(self):
+    #     pass
+
         
-    def update(self, target):
-        self.x = target.x
-        self.y = target.y
-        
 
-# Create font
+cactus = Cactus(300, 230, 50, 50, pygame.image.load("assets/cacti/cactus1.png"))
+ground = Ground(0, 250, 642, 60, pygame.image.load("assets/ground.png"))
+dinosaur = Dinosaur(120, 225, 43, 51, pygame.image.load("assets/Dino1.png"))
 
-# Create sounds
 
-# Create game objects
-player = Player(600, 0, 20, 40)
-blocks = []
-blocks.append(Sprite(600, 200, 400, 20))
-blocks.append(Sprite(600, 400, 600, 20))
-blocks.append(Sprite(600, 600, 1000, 20))
-blocks.append(Sprite(1000, 500, 100, 200))
-blocks.append(Sprite(200, 500, 100, 200))
 
-# Create camera object
-camera = Camera(player)
-
-# Main game loop
 while True:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT: 
+        if event.type == pygame.QUIT:
+            pygame.quit()
             sys.exit()
 
-        # Keyboard events
+        #Keyboard events - I only jump though...
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                player.left()
-            elif event.key == pygame.K_RIGHT:
-                player.right()
-            elif event.key == pygame.K_SPACE:
-                for block in blocks:
-                    if player.is_aabb_collision(block):
-                        player.jump()
-                        break
+            if event.key == pygame.K_SPACE or event.key == pygame.K_UP:
+                if dinosaur.state == False:
+                    dinosaur.jump()
+            elif event.key == pygame.K_DOWN:
+                dinosaur.falldown()
 
-    # Move/Update objects
-    player.move()
-    camera.update(player)
 
-    # Check for collisions
-    for block in blocks:
-        if player.is_aabb_collision(block):
-            # Player is to the left
-            if player.x < block.x - block.width/2.0 and player.dx > 0:
-                player.dx = 0
-                player.x = block.x - block.width/2.0 - player.width/2.0
-            # Player is to the right
-            elif player.x > block.x + block.width/2.0 and player.dx < 0:
-                player.dx = 0
-                player.x = block.x + block.width/2.0 + player.width/2.0
-            # Player is above
-            elif player.y < block.y:
-                player.dy = 0
-                player.y = block.y - block.height/2.0 - player.height/2.0 + 1
-                player.dx *= block.friction
-            # Player is below
-            elif player.y > block.y:
-                player.dy = 0
-                player.y = block.y + block.height/2.0 + player.height/2.0 
+    #Logic
 
-    # Border check the player
-    if player.y > 800:
-        player.goto(600, 0)
-        player.dx = 0
-        player.dy = 0
-        
-    # Render (Draw stuff)
-    # Fill the background color
-    screen.fill(BLACK)
-    
-    # Render objects
-    player.render(camera)
-    for block in blocks:
-        block.render(camera)
-     
-    # Flip the display
-    pygame.display.flip()
-    
-    # Set the FPS
+    #This is how I change my dinosaur's x and y coordinates and dy and dx
+    dinosaur.update()
+    # cactus.move()
+
+
+    #My True or False decreee for the dinosaur becomes false again when it touched the "ground"
+    if dinosaur.y >= 225:
+        dinosaur.state = False
+
+    #So my dinosaur doesn't fall out of the stage   
+    if dinosaur.y > 225:
+        dinosaur.place(120, 225)
+
+
+    #As you progress forward in the game, it makes you look like you are moving faster but in reality everything else is moving faster
+    time_passed += 0.0075
+    if time_passed >= 50:
+        time_passed = 50
+
+
+    #White canvas
+    screen.fill("white")
+
+    #Drawing all of my objects
+    ground.draw()
+    # cactus.draw()
+    dinosaur.animate()
+
+    #How I simulate the ground moving backwards and going back
+    ground.move()
+
+
+    pygame.display.update()
     clock.tick(30)
+
+
