@@ -1,6 +1,6 @@
 import pygame
 import sys
-import time
+import math
 import random
 
 pygame.init()
@@ -49,13 +49,13 @@ class Dinosaur(Sprite):
         #I'm having all of my sprites in an image and im gonna rotate between them, this is where I initialize them
         self.sprites = []
         self.index = 0
-        self.sprites.append(pygame.image.load("assets/Dino1.png"))
-        self.sprites.append(pygame.image.load("assets/Dino2.png"))
-        self.image = self.sprites[self.index]
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino1.png"), (55.9, 66.3))) #43 x 51
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino2.png"), (55.9, 66.3)))
+
 
         #To jump I need gravity and a true or false for jumping
         self.state = False
-        self.gravity = 1
+        self.gravity = 1.5
 
 
     def animate(self): # I need help on slowing down my animation, i tried time.sleep but it stopped everything
@@ -75,15 +75,69 @@ class Dinosaur(Sprite):
         self.y = y
 
     def jump(self):
-        self.dy = -15
+        #I cahneg my state to True so it can't double jump in air
+        self.dy = -20
         self.state = True
+
+    def falldown(self): # falling down faster
+        self.dy += 20
         
-        
+ 
+
+class Cactus(Sprite):
+    def __init__(self, x, y, width, height, image):
+        Sprite.__init__(self, x, y, width, height, image)
+        self.image = pygame.image.load("assets/cacti/cactus1.png")
+        self.x_ = [642, 1242, 1842] # stores the x coordinate of all fo my cactus, if you want to add more cactus just add 1 more value in here
+
+
+    def draw(self):
+        for i in range(len(self.x_)):
+            screen.blit(self.image, (self.x_[i], self.y))
+    
+    def update(self):
+        for i in range(len(self.x_)):
+            self.x_[i] -= time_passed
+            if self.x_[i] < -65:
+                self.x_[i] = 1842
+
+class Bird(Sprite):
+    def __init__(self, x, y, width, height, image):
+        Sprite.__init__(self, x, y, width, height, image)
+
+        #I'm having all of my sprites in an image and im gonna rotate between them, this is where I initialize them
+        self.sprites = []
+        self.index = 0
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/ptero1.png"), (54.6, 40.3))) #42 x 31
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/ptero2.png"), (54.6, 40.3)))
+
+        self.min_amount = 300
+    
+    def animate(self): # I need help on slowing down my animation, i tried time.sleep but it stopped everything
+        self.index += 1
+        if self.index > 1:
+            self.index = 0
+        self.image = self.sprites[self.index]
+        screen.blit(self.image, (self.x, self.y))
+
+    def update(self):
+        self.x -= time_passed * 1.8
+        if self.x < -42:
+            self.x = 2568 + self.min_amount
+
+
+
+
+
+
+
+
 
     
 ground = Ground(0, 250, 642, 60, pygame.image.load("assets/ground.png"))
-dinosaur = Dinosaur(50, 225, 43, 51, pygame.image.load("assets/Dino1.png"))
-
+cactus = Cactus(642, 220, 65, 65, pygame.image.load("assets/cacti/cactus1.png"))
+bird = Bird(642, 100, 42, 31, pygame.image.load("assets/Ptero1.png"))
+dinosaur = Dinosaur(100, 220, 55.9, 66.3, pygame.image.load("assets/Dino1.png"))
 
 
 while True:
@@ -97,21 +151,27 @@ while True:
             if event.key == pygame.K_SPACE or event.key == pygame.K_UP:
                 if dinosaur.state == False:
                     dinosaur.jump()
-
+            elif event.key == pygame.K_DOWN:
+                dinosaur.falldown()
 
     #Logic
 
-    #This is how I change my dinosaur's x and y coordinates and dy and dx
+    #Collision Detection
+
+
+    #This is how I change my dinosaur's x and y coordinates and dy and constantly
     dinosaur.update()
+    cactus.update()
+    bird.update()
 
 
     #My True or False decreee for the dinosaur becomes false again when it touched the "ground"
-    if dinosaur.y == 225:
+    if dinosaur.y >= 220:
         dinosaur.state = False
 
     #So my dinosaur doesn't fall out of the stage   
-    if dinosaur.y > 225:
-        dinosaur.place(50, 225)
+    if dinosaur.y > 220:
+        dinosaur.place(100, 220)
 
 
     #As you progress forward in the game, it makes you look like you are moving faster but in reality everything else is moving faster
@@ -125,13 +185,13 @@ while True:
 
     #Drawing all of my objects
     ground.draw()
+    cactus.draw()
+    bird.animate()
     dinosaur.animate()
 
-    #How I simulate the ground moving backwards and going back
+    #How I simulate the objecrs moving backwards and going back
     ground.move()
 
 
     pygame.display.update()
     clock.tick(30)
-
-
