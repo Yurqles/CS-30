@@ -49,8 +49,6 @@ def removeAll():
 def removeLast():
     if len(circle_pos)-1 > 0:
         circle_pos.pop()
-    else:
-        print("Stop please. This is the last one, you killed it's whole family :(")
 
 
 # Run until the user asks to quit
