@@ -1,17 +1,27 @@
 import pygame
+from pygame import mixer
 import sys
 import math
 import random
 
 pygame.init()
 
-#Screen proportions
+#Global Variables
 WIDTH = 642
 HEIGHT = 400
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
-pygame.display.set_caption("Endless runner")
-time_passed = 5
+pygame.display.set_caption("Chrome Dino!")
+time_passed = 8
+font = pygame.font.Font('freesansbold.ttf', 16)
+score_value = 0
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+play1 = True
+play2 = True
+
+
 
 
 
@@ -42,53 +52,12 @@ class Ground(Sprite):
 
     
 
-class Dinosaur(Sprite):
-    def __init__(self, x, y, width, height, image):
-        Sprite.__init__(self, x, y, width, height, image)
-
-        #I'm having all of my sprites in an image and im gonna rotate between them, this is where I initialize them
-        self.sprites = []
-        self.index = 0
-        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino1.png"), (55.9, 66.3))) #43 x 51
-        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino2.png"), (55.9, 66.3)))
-
-
-        #To jump I need gravity and a true or false for jumping
-        self.state = False
-        self.gravity = 1.5
-
-
-    def animate(self): # I need help on slowing down my animation, i tried time.sleep but it stopped everything
-        self.index += 1
-        if self.index > 1:
-            self.index = 0
-        self.image = self.sprites[self.index]
-        screen.blit(self.image, (self.x, self.y))
-
-    def update(self):
-        self.x += self.dx
-        self.y += self.dy
-        self.dy += self.gravity
-    
-    def place(self, x, y):
-        self.x = x
-        self.y = y
-
-    def jump(self):
-        #I cahneg my state to True so it can't double jump in air
-        self.dy = -20
-        self.state = True
-
-    def falldown(self): # falling down faster
-        self.dy += 20
-        
- 
 
 class Cactus(Sprite):
     def __init__(self, x, y, width, height, image):
         Sprite.__init__(self, x, y, width, height, image)
         self.image = pygame.image.load("assets/cacti/cactus1.png")
-        self.x_ = [642, 1242, 1842] # stores the x coordinate of all fo my cactus, if you want to add more cactus just add 1 more value in here
+        self.x_ = [642, 1142, 1442, 1942] # stores the x coordinate of all fo my cactus, if you want to add more cactus just add 1 more value in here
 
 
     def draw(self):
@@ -115,28 +84,99 @@ class Bird(Sprite):
     
     def animate(self): # I need help on slowing down my animation, i tried time.sleep but it stopped everything
         self.index += 1
-        if self.index > 1:
+
+        if self.index >= 16:
             self.index = 0
-        self.image = self.sprites[self.index]
+
+        if self.index < 8:
+            self.image = pygame.transform.scale(pygame.image.load("assets/ptero1.png"), (54.6, 40.3))
+        elif self.index >= 8:
+            self.image = pygame.transform.scale(pygame.image.load("assets/ptero2.png"), (54.6, 40.3))
+        
         screen.blit(self.image, (self.x, self.y))
 
     def update(self):
-        self.x -= time_passed * 1.8
+        self.x -= time_passed
         if self.x < -42:
-            self.x = 2568 + self.min_amount
+            self.x = cactus.x_[3] +300
 
 
+class Dinosaur(Sprite):
+    def __init__(self, x, y, width, height, image):
+        Sprite.__init__(self, x, y, width, height, image)
+
+        #I'm having all of my sprites in an image and im gonna rotate between them, this is where I initialize them
+        self.sprites = []
+        self.index = 0
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino1.png"), (55.9, 66.3))) #43 x 51
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino2.png"), (55.9, 66.3)))
 
 
+        #To jump I need gravity and a true or false for jumping
+        self.state = False
+        self.gravity = 1.5
 
+        self.alive = True
+        self.container = []
 
+        self.jump_noise = mixer.Sound('assets/sfx/jump.mp3')
+        self.deadnoise = mixer.Sound("assets/sfx/lose.mp3")
+        self.every100 = mixer.Sound("assets/sfx/100points.mp3")
+        self.playsound = True
 
+    def animate(self): # I need help on slowing down my animation, i tried time.sleep but it stopped everything
+        self.index += 1
 
+        if self.index >= 16:
+            self.index = 0
+
+        if self.index < 8:
+            self.image = pygame.transform.scale(pygame.image.load("assets/Dino1.png"), (55.9, 66.3))
+        elif self.index >= 8:
+            self.image = pygame.transform.scale(pygame.image.load("assets/Dino2.png"), (55.9, 66.3))
+        
+        screen.blit(self.image, (self.x, self.y))
+
+    def update(self):
+        self.x += self.dx
+        self.y += self.dy
+        self.dy += self.gravity
+    
+    def place(self, x, y):
+        self.x = x
+        self.y = y
+
+    def jump(self):
+        #I chnage my state to True so it can't double jump in air
+        self.dy = -20
+        self.jump_noise.play()
+        self.state = True
+
+    def falldown(self): # falling down faster
+        self.dy += 20
+
+    def is_distance_collision(self, other):
+        distance = (((self.x-other.x) ** 2) + ((self.y-other.y) ** 2)) ** 0.5
+        if distance < (self.width + other.width)/2.0:
+            return True
+        else:
+            return False
+
+    def is_aabb_collision(self, other, anArray, i):
+        # Axis Aligned Bounding Box
+        x_collision = (math.fabs(self.x - anArray[i]) * 2) < (self.width + other.width)
+        y_collision = (math.fabs(self.y - other.y) * 2) < (self.height + other.height)
+        return (x_collision and y_collision)
+
+#To find multiples of 100
+def multiples(num):
+    if num % 100==0:
+        return True
 
     
 ground = Ground(0, 250, 642, 60, pygame.image.load("assets/ground.png"))
 cactus = Cactus(642, 220, 65, 65, pygame.image.load("assets/cacti/cactus1.png"))
-bird = Bird(642, 100, 42, 31, pygame.image.load("assets/Ptero1.png"))
+bird = Bird(-52, 100, 42, 31, pygame.image.load("assets/Ptero1.png"))
 dinosaur = Dinosaur(100, 220, 55.9, 66.3, pygame.image.load("assets/Dino1.png"))
 
 
@@ -155,8 +195,31 @@ while True:
                 dinosaur.falldown()
 
     #Logic
+    if dinosaur.alive == True:
+        score_value +=1
 
     #Collision Detection
+    if dinosaur.is_distance_collision(bird):
+        dinosaur.alive = False
+    for i in range(len(cactus.x_)):
+        if dinosaur.is_aabb_collision(cactus, cactus.x_, i):
+            dinosaur.alive = False
+
+    #Make a noise each time you hit a multiple of 100
+    if multiples(score_value):
+        play2 = True
+        if play2 == True:
+            dinosaur.every100.play()
+            play2 = False
+            
+
+    if dinosaur.alive == False:
+        time_passed = 0
+        dinosaur.gravity = 0
+        dinosaur.dy = 0
+        if play1 == True:
+            dinosaur.deadnoise.play()
+            play1 = False
 
 
     #This is how I change my dinosaur's x and y coordinates and dy and constantly
@@ -181,7 +244,10 @@ while True:
 
 
     #White canvas
-    screen.fill("white")
+    if score_value < 1000:
+        screen.fill(WHITE)
+    elif score_value >= 1000:
+        screen.fill(BLACK)
 
     #Drawing all of my objects
     ground.draw()
@@ -189,9 +255,14 @@ while True:
     bird.animate()
     dinosaur.animate()
 
+    #Where I show the score
+    score = font.render("Score : " + str(score_value), True, (RED))
+    screen.blit(score, (540, 10))
+
     #How I simulate the objecrs moving backwards and going back
     ground.move()
 
 
     pygame.display.update()
     clock.tick(30)
+
