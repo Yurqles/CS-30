@@ -49,7 +49,7 @@ def removeAll():
 def removeLast():
     if len(circle_pos)-1 > 0:
         circle_pos.pop()
-
+    
 
 # Run until the user asks to quit
 running = True
