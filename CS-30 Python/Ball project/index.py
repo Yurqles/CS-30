@@ -40,6 +40,7 @@ def popValue(): # I need help with this, it only erases the last one
 
         if math.sqrt(sqx + sqy) < 10:
             circle_pos.pop(i)
+            break
 
 def removeAll():
     for i in range(len(circle_pos)):
