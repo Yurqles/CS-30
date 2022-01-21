@@ -3,8 +3,6 @@
 #Left click to make an in-elastic ball
 
 # Import and initialize the pygame library
-from turtle import circle, color, pos
-from winreg import REG_NO_LAZY_FLUSH
 import pygame
 
 
