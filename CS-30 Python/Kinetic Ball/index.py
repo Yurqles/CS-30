@@ -3,57 +3,82 @@
 #Left click to make an in-elastic ball
 
 # Import and initialize the pygame library
+import random
 import pygame
+import time
 
 
-#Global Varaibles\
+#Global Varaibles
 WIDTH = (500)
 HEIGHT = (500)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+RED = (255, 0, 0)
 
+#start pygame
 pygame.init()
 
 # Set up the drawing window
 screen = pygame.display.set_mode((500, 500))
 
 class Ball():
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.color = WHITE
+    def __init__(self, color):
+        self.color = color
         self.width = 30
-        self.dx = 0
-        self.dy = 0
         self.gravity = 0.0001
-        self.circle_pos = []
-        self.circle_pos_ = []
+        self.x_position = []
+        self.y_position = []
+        self.dx_values = [-0.05, 0.015, -0.01, 0.01, 0.005, -0.005]
+        self.dx_position = []
+        self.dy_position = []
 
     def getPosition(self):
         pos = pos = pygame.mouse.get_pos()
-        self.circle_pos.append(pos)
-        self.circle_pos_ = list(self.circle_pos)
-
-    def draw(self):
-        for i in range(len(self.circle_pos_)):
-            pygame.draw.circle(screen, self.color, (self.circle_pos_[i]), self.width)
-        pass
+        self.x_position.append(pos[0])
+        self.y_position.append(pos[1])
+        self.dx_position.append(random.choice(self.dx_values))
+        self.dy_position.append(0)
     
+    def draw(self):
+        self.start_time = time.time()
+        for i in range(len(self.x_position)):
+            pygame.draw.circle(screen, self.color, (self.x_position[i], self.y_position[i]), self.width)
     def update(self):
-        for i in range(len(self.circle_pos)):
-            self.circle_pos_[i][0] += self.dx
-            self.circle_pos_[i][1] += self.dy
-            self.dy += self.gravity
-            if self.circle_pos_[1] + self.width > 400:
-                self.dy *= -1
-        pass
+        for i in range(len(self.x_position)):
+            self.x_position[i] += self.dx_position[i]
+            self.y_position[i] += self.dy_position[i]
+            self.dy_position[i] += self.gravity
+
+            #So it can bounce back up once it hits the line
+            if self.y_position[i] > 360:
+                self.dy_position[i] *= -1
+            if self.x_position[i] - self.width< 0:
+                self.dx_position[i] *= -1
+            elif self.x_position[i] + self.width > WIDTH:
+                self.dx_position[i] *= -1
+    
+class ElasticBall(Ball):
+    def __init__(self, color):
+        super().__init__(color)
+        self.gravity = 0.0001
+    
+class InelasticBall(Ball):
+    def __init__(self, color):
+        super().__init__(color)
+        self.gravity = 0.0001
+
+    def addWork(self):
+        for i in range(len(self.x_position)):
+            self.dy_position[i] *= 0.9999
 
 
+    
+    
 
 #Create ball
 
-ball = Ball(300, 30)
-
+elasticBall = ElasticBall(WHITE)
+inelasticBall = InelasticBall(RED)
 
 
 # Run until the user asks to quit
@@ -66,15 +91,22 @@ while running:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                ball.getPosition()
+                elasticBall.getPosition()
+            elif event.button == 3:
+                inelasticBall.getPosition()
+
 
     #Logic
-    ball.update()
+    elasticBall.update()
+    inelasticBall.update()
+    inelasticBall.addWork()
+
 
     # Fill the background with white
     screen.fill(BLACK)
     pygame.draw.line(screen, WHITE, (0, 400), (WIDTH, 400), 20)
-    ball.draw()
+    elasticBall.draw()
+    inelasticBall.draw()
 
 
 
@@ -84,3 +116,6 @@ while running:
 
 # Done! Time to quit.
 pygame.quit()
+
+
+
