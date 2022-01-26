@@ -77,8 +77,8 @@ class Bird(Sprite):
         #I'm having all of my sprites in an image and im gonna rotate between them, this is where I initialize them
         self.sprites = []
         self.index = 0
-        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/ptero1.png"), (54.6, 40.3))) #42 x 31
-        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/ptero2.png"), (54.6, 40.3)))
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/ptero1.png"), (int(54.6), int(40.3)))) #42 x 31
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/ptero2.png"), (int(54.6), int(40.3))))
 
         self.min_amount = 300
     
@@ -89,9 +89,9 @@ class Bird(Sprite):
             self.index = 0
 
         if self.index < 8:
-            self.image = pygame.transform.scale(pygame.image.load("assets/ptero1.png"), (54.6, 40.3))
+            self.image = pygame.transform.scale(pygame.image.load("assets/ptero1.png"), (int(54.6), int(40.3)))
         elif self.index >= 8:
-            self.image = pygame.transform.scale(pygame.image.load("assets/ptero2.png"), (54.6, 40.3))
+            self.image = pygame.transform.scale(pygame.image.load("assets/ptero2.png"), (int(54.6), int(40.3)))
         
         screen.blit(self.image, (self.x, self.y))
 
@@ -108,8 +108,8 @@ class Dinosaur(Sprite):
         #I'm having all of my sprites in an image and im gonna rotate between them, this is where I initialize them
         self.sprites = []
         self.index = 0
-        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino1.png"), (55.9, 66.3))) #43 x 51
-        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino2.png"), (55.9, 66.3)))
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino1.png"), (int(55.9), int(66.3)))) #43 x 51
+        self.sprites.append(pygame.transform.scale(pygame.image.load("assets/Dino2.png"), (int(55.9), int(66.3))))
 
 
         #To jump I need gravity and a true or false for jumping
@@ -131,9 +131,9 @@ class Dinosaur(Sprite):
             self.index = 0
 
         if self.index < 8:
-            self.image = pygame.transform.scale(pygame.image.load("assets/Dino1.png"), (55.9, 66.3))
+            self.image = pygame.transform.scale(pygame.image.load("assets/Dino1.png"), (int(55.9), int(66.3)))
         elif self.index >= 8:
-            self.image = pygame.transform.scale(pygame.image.load("assets/Dino2.png"), (55.9, 66.3))
+            self.image = pygame.transform.scale(pygame.image.load("assets/Dino2.png"), (int(55.9), int(66.3)))
         
         screen.blit(self.image, (self.x, self.y))
 
@@ -177,7 +177,7 @@ def multiples(num):
 ground = Ground(0, 250, 642, 60, pygame.image.load("assets/ground.png"))
 cactus = Cactus(642, 220, 65, 65, pygame.image.load("assets/cacti/cactus1.png"))
 bird = Bird(-52, 100, 42, 31, pygame.image.load("assets/Ptero1.png"))
-dinosaur = Dinosaur(100, 220, 55.9, 66.3, pygame.image.load("assets/Dino1.png"))
+dinosaur = Dinosaur(100, 220, int(55.9), int(66.3), pygame.image.load("assets/Dino1.png"))
 
 
 while True:
