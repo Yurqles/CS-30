@@ -1,3 +1,4 @@
+#Chrome Dino in OOP Made by Abdirahman Hussein
 import pygame
 from pygame import mixer
 import sys
